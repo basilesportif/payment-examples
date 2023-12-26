@@ -1,6 +1,7 @@
 const crypto = require('crypto');
 
 // implements:  https://docs.fondy.eu/en/docs/page/3/#chapter-3-5
+// returns: original request with signature field added
 const sign = (req) => {
   const sorted = Object.keys(req).sort().reduce((acc, key) => {
     acc[key] = req[key];
@@ -9,7 +10,7 @@ const sign = (req) => {
   const joined = 'test|' + Object.keys(sorted).map(key => sorted[key]).join('|');
   const hash = crypto.createHash('sha1');
   hash.update(joined);
-  return hash.digest('hex');
+  return { ...sorted, signature: hash.digest('hex') };
 };
 
 // "signature":"df38818facfbfd79953fa847667dac73a1291127",
