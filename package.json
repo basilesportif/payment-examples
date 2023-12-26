@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node index.js"
+    "start": "node --no-warnings index.js"
   },
   "repository": {
     "type": "git",
@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/timlucmiptev/payment-examples/issues"
   },
-  "homepage": "https://github.com/timlucmiptev/payment-examples#readme"
+  "homepage": "https://github.com/timlucmiptev/payment-examples#readme",
+  "dependencies": {
+    "uuid": "^9.0.1"
+  }
 }

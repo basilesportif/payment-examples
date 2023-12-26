@@ -1,8 +1,9 @@
 const crypto = require('crypto');
+const { v4: uuidv4 } = require('uuid');
 
 // implements:  https://docs.fondy.eu/en/docs/page/3/#chapter-3-5
 // returns: original request with signature field added
-const sign = (req) => {
+const getSignature = (req) => {
   const sorted = Object.keys(req).sort().reduce((acc, key) => {
     acc[key] = req[key];
     return acc;
@@ -13,13 +14,35 @@ const sign = (req) => {
   return { ...sorted, signature: hash.digest('hex') };
 };
 
-// "signature":"df38818facfbfd79953fa847667dac73a1291127",
 const req = {
-    "order_id":"test123456",
-    "order_desc":"test order",
-    "currency":"USD",
-    "amount":"125",
-    "merchant_id":"1396424"
-  }
+  "order_id": uuidv4(),
+  "order_desc":"test order 2",
+  "currency":"USD",
+  "amount":"125",
+  "merchant_id":"1396424",
+  "server_callback_url":"http://myshop/callback/",
+  "response_url":"http://myshop/return/",
+}
 
-console.log(sign(req));
+// signature: 91ea7da493a8367410fe3d7f877fb5e0ed666490
+const req1 = {
+  "server_callback_url": "http://myshop/callback/",
+  "order_id": "TestOrder2",
+  "currency": "USD",
+  "merchant_id": "1396424",
+  "order_desc": "Test payment",
+  "amount": "1000",
+}
+
+console.log(getSignature(req));
+
+const res =
+fetch('https://pay.fondy.eu/api/checkout/url', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({request: getSignature(req)}),
+});
+res.then(r => r.json()).then(console.log);
+// https://pay.fondy.eu/api/checkout/url
