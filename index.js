@@ -51,20 +51,6 @@ fetch('https://pay.fondy.eu/api/checkout/redirect', {
 res.then(r => r.text()).then(console.log);
 */
 
-/*
-// Interaction B
-var res =
-fetch('https://pay.fondy.eu/api/checkout/url', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  body: JSON.stringify({request: getSignature(genReq())}),
-});
-res.then(r => r.json().then(x => console.log(x.response.checkout_url)));
-*/
-
-// returns checkout_url
 const runInteractionB = async (fondyReq) => {
   const res = await 
     fetch('https://pay.fondy.eu/api/checkout/url', {
@@ -72,7 +58,7 @@ const runInteractionB = async (fondyReq) => {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({request: getSignature(fondyReq)}),
+      body: JSON.stringify({request: fondyReq}),
     });
   const json = await res.json();
   console.log(json);
@@ -102,7 +88,8 @@ const runServer = () => {
 };
 
 const run = async () => {
-  const checkout_url = await runInteractionB(genReq());
+  const fondyReq = getSignature(genReq());
+  const checkout_url = await runInteractionB(fondyReq);
   console.log(checkout_url);
   runServer();
 };
