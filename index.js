@@ -38,18 +38,13 @@ const staticReq = {
   "amount": "1000",
 }
 
-/*
-// Interaction A: TODO doesn't work with these params
-var res = 
-fetch('https://pay.fondy.eu/api/checkout/redirect', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  body: JSON.stringify({request: getSignature(genReq())})
-});
-res.then(r => r.text()).then(console.log);
-*/
+const withPreAuth = (fondyReq) => {
+  return {
+    ...fondyReq,
+    preauth: 'Y',
+    required_rectoken: 'Y',
+  };
+};
 
 const runInteractionB = async (fondyReq) => {
   const res = await 
@@ -88,8 +83,9 @@ const runServer = () => {
 };
 
 const run = async () => {
-  const fondyReq = getSignature(genReq());
-  const checkout_url = await runInteractionB(fondyReq);
+  const fondyReq = genReq();
+  const withPreAuthReq = withPreAuth(fondyReq);
+  const checkout_url = await runInteractionB(getSignature(withPreAuthReq));
   console.log(checkout_url);
   runServer();
 };
