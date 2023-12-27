@@ -1,5 +1,6 @@
 const crypto = require('crypto');
 const { v4: uuidv4 } = require('uuid');
+const express = require('express');
 
 // implements:  https://docs.fondy.eu/en/docs/page/3/#chapter-3-5
 // returns: original request with signature field added
@@ -21,8 +22,9 @@ const genReq = () => {
   "currency":"USD",
   "amount":"125",
   "merchant_id":"1396424",
-  "server_callback_url":"http://myshop/callback/",
-  "response_url":"http://myshop/return/",
+  "server_callback_url":"http://localhost:3000/server_callback_url",
+  "response_url":"http://localhost:3000/response_url",
+  "sender_email": "tim@blah.com",
   }
 }
 
@@ -49,6 +51,7 @@ fetch('https://pay.fondy.eu/api/checkout/redirect', {
 res.then(r => r.text()).then(console.log);
 */
 
+/*
 // Interaction B
 var res =
 fetch('https://pay.fondy.eu/api/checkout/url', {
@@ -58,4 +61,50 @@ fetch('https://pay.fondy.eu/api/checkout/url', {
   },
   body: JSON.stringify({request: getSignature(genReq())}),
 });
-res.then(r => r.json()).then(console.log);
+res.then(r => r.json().then(x => console.log(x.response.checkout_url)));
+*/
+
+// returns checkout_url
+const runInteractionB = async (fondyReq) => {
+  const res = await 
+    fetch('https://pay.fondy.eu/api/checkout/url', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({request: getSignature(fondyReq)}),
+    });
+  const json = await res.json();
+  console.log(json);
+  return json.response.checkout_url;
+};
+
+const runServer = () => {
+  // indent all
+  const app = express();
+  const port = 3000;
+  app.use(express.urlencoded({ extended: true }));
+  
+  app.post('/server_callback_url', (req, res) => {
+    console.log('server_callback_url');
+    res.send('server_callback_url');
+  });
+  app.post('/response_url', (req, res) => {
+    console.log('response_url');
+    console.log(req.body);
+    const strBody = JSON.stringify(req.body, undefined, 2);
+    res.status(200).send(`<html><body><pre>${strBody}</pre></body></html>`);
+  });
+  
+  app.listen(port, () => {
+    console.log(`Server listening at http://localhost:${port}`);
+  });
+};
+
+const run = async () => {
+  const checkout_url = await runInteractionB(genReq());
+  console.log(checkout_url);
+  runServer();
+};
+
+run();
