@@ -65,7 +65,7 @@ const run = async () => {
   console.log(accountLink);
   //open(accountLink.url);
   const accounts = await stripe.accounts.list({ limit: 10 });
-  console.log(accounts.data.map(account => account.id));
+  console.log(accounts.data.map(account => [ account.id, account.first_name, account.last_name, account.email, account.country ]));
   runServer();
 };
 
