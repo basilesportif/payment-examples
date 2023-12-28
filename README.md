@@ -9,7 +9,12 @@ flags like "this account is a marketplace fee distributor" to achieve
 the desired legal and programmatic behavior.
 
 ### Run Code
-`npm run fondy`
+```
+npm install
+npm run fondy
+```
+Then, follow the payment flows to put a hold on a card, and then click
+the "Accept Booking" or "Reject Booking" to do those actions.
 
 ### Payment Flow
 A "FOP" (фоп) is a Ukrainian LLC for small businesses, with low total
