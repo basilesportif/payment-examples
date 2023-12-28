@@ -18,24 +18,24 @@ const getSignature = (req) => {
   return { ...sorted, signature: hash.digest('hex') };
 };
 
-const callFondy = async (apiUrl, fondyReq) => {
+const callFondy = async ({apiUrl, req}) => {
   const res = await 
     fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({request: getSignature(fondyReq)}),
+      body: JSON.stringify({request: getSignature(req)}),
     });
   return await res.json();
 };
 
-const mkReq = (order_id, order_desc) => {
+const mkReq = ({order_id, order_desc, amount, currency}) => {
   return {
     order_id,
     order_desc,
-    currency: 'USD',
-    amount: '45200',
+    currency,
+    amount,
     merchant_id: '1396424',
     server_callback_url: 'http://localhost:3000/server_callback_url',
     response_url: 'http://localhost:3000/response_url',
@@ -52,6 +52,12 @@ const withPreAuth = (fondyReq) => {
 };
 /* **** end Fondy API Utils **** */
 
+/* orders indexed by order_id */
+var orderDb = {};
+
+const insertOrder = (order) => {
+  orderDb[order.order_id] = order;
+};
 
 const runServer = () => {
   // indent all
@@ -76,8 +82,16 @@ const runServer = () => {
 };
 
 const run = async () => {
-  const fondyReq = mkReq(uuidv4(), 'Stylist: Ganna');
-  const result = await callFondy(API_ACCEPT_PAYMENT_FLOW_B, withPreAuth(fondyReq));
+  const order = {
+    order_id: uuidv4(),
+    order_desc: 'Stylist: Ganna',
+    amount: 45200,
+    currency: 'USD'};
+  const fondyReq = mkReq(order);
+  const result = await callFondy({
+    apiUrl: API_ACCEPT_PAYMENT_FLOW_B,
+    req: withPreAuth(fondyReq)
+  });
   console.log(result);
   runServer();
 };
