@@ -1,6 +1,7 @@
-const crypto = require('crypto');
-const { v4: uuidv4 } = require('uuid');
-const express = require('express');
+import crypto from 'crypto';
+import { v4 as uuidv4 } from 'uuid';
+import express from 'express';
+import open from 'open';
 
 /* **** Fondy API Utils **** */
 const API_ACCEPT_PAYMENT_FLOW_B = 'https://api.fondy.eu/api/checkout/url/';
@@ -59,6 +60,10 @@ const insertOrder = (order) => {
   orderDb[order.order_id] = order;
 };
 
+const updateOrder = (updatedOrder) => {
+  orderDb[updatedOrder.order_id] = updatedOrder;
+};
+
 const getOrder = (order_id) => {
   return orderDb[order_id];
 };
@@ -77,10 +82,12 @@ const runServer = () => {
     console.log('response_url');
     console.log(req.body);
     const strBody = JSON.stringify(req.body, undefined, 2);
+    const order = getOrder(req.body.order_id);
+    updateOrder({...order, rectoken: req.body.rectoken});
     res.status(200).send(
       `<html><body>
       <pre>${strBody}</pre>
-      <a href="http://localhost:3000/accept_booking/${req.body.order_id}">
+      <a href="http://localhost:3000/accept_booking/${order.order_id}">
         <button>Accept Booking</button>
       </a>
       </body></html>`
@@ -115,7 +122,7 @@ const run = async () => {
     req: withPreAuth(fondyReq)
   });
   console.log(result);
-  console.log(result.response.checkout_url);
+  open(result.response.checkout_url);
   runServer();
 };
 
