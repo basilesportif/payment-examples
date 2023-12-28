@@ -56,15 +56,15 @@ const withPreAuth = (fondyReq) => {
 /* orders indexed by order_id */
 var orderDb = {};
 
-const insertOrder = (order) => {
+const insertOrderDb = (order) => {
   orderDb[order.order_id] = order;
 };
 
-const updateOrder = (updatedOrder) => {
+const updateOrderDb = (updatedOrder) => {
   orderDb[updatedOrder.order_id] = updatedOrder;
 };
 
-const getOrder = (order_id) => {
+const getOrderDb = (order_id) => {
   return orderDb[order_id];
 };
 
@@ -82,8 +82,8 @@ const runServer = () => {
     console.log('response_url');
     console.log(req.body);
     const strBody = JSON.stringify(req.body, undefined, 2);
-    const order = getOrder(req.body.order_id);
-    updateOrder({...order, rectoken: req.body.rectoken});
+    const order = getOrderDb(req.body.order_id);
+    updateOrderDb({...order, rectoken: req.body.rectoken});
     res.status(200).send(
       `<html><body>
       <pre>${strBody}</pre>
@@ -96,7 +96,7 @@ const runServer = () => {
   app.get('/accept_booking/:order_id', (req, res) => {
     console.log('accept_booking');
     const order_id = req.params.order_id;
-    const strOrder = JSON.stringify(getOrder(order_id), undefined, 2);
+    const strOrder = JSON.stringify(getOrderDb(order_id), undefined, 2);
     res.status(200).send(
       `<html><body>
       <pre>${strOrder}</pre>
@@ -115,14 +115,14 @@ const run = async () => {
     order_desc: 'Stylist: Ganna',
     amount: 45200,
     currency: 'USD'};
-  insertOrder(order);
+  insertOrderDb(order);
   const fondyReq = mkReq(order);
   const result = await callFondy({
     apiUrl: API_ACCEPT_PAYMENT_FLOW_B,
     req: withPreAuth(fondyReq)
   });
   console.log(result);
-  open(result.response.checkout_url);
+  open(result.response.checkout_url);  //open in default browser
   runServer();
 };
 
