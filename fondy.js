@@ -3,7 +3,7 @@ const { v4: uuidv4 } = require('uuid');
 const express = require('express');
 
 /* **** Fondy API Utils **** */
-const API_INTERACTION_B = 'https://api.fondy.eu/api/checkout/url/';
+const API_ACCEPT_PAYMENT_FLOW_B = 'https://api.fondy.eu/api/checkout/url/';
 
 // implements:  https://docs.fondy.eu/en/docs/page/3/#chapter-3-5
 // returns: original request with signature field added
@@ -77,7 +77,7 @@ const runServer = () => {
 
 const run = async () => {
   const fondyReq = mkReq(uuidv4(), 'Stylist: Ganna');
-  const result = await callFondy(API_INTERACTION_B, withPreAuth(fondyReq));
+  const result = await callFondy(API_ACCEPT_PAYMENT_FLOW_B, withPreAuth(fondyReq));
   console.log(result);
   runServer();
 };
