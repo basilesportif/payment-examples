@@ -27,6 +27,11 @@ const createAccount = async ({email, country}) => {
  * - create a payment intent
  * - open page
  * - redirect after payment done
+ 
+ * Homepage
+ * click to create a stylist account and send them through the flow
+ * choose a stylist to do a payment to
+ * view all connected accounts
 */
 
 const runServer = () => {
@@ -58,7 +63,9 @@ const run = async () => {
     type: 'account_onboarding',
   });
   console.log(accountLink);
-  open(accountLink.url);
+  //open(accountLink.url);
+  const accounts = await stripe.accounts.list({ limit: 10 });
+  console.log(accounts.data.map(account => account.id));
   runServer();
 };
 
