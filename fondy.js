@@ -43,6 +43,7 @@ const callFondyTest = async ({apiUrl, req}) => {
   return await res.json();
 };
 
+/* https://docs.fondy.eu/en/docs/page/12/ */
 const capturePayment = async ({order_id, amount, currency}) => {
   const req = {
     order_id,
@@ -58,6 +59,7 @@ const capturePayment = async ({order_id, amount, currency}) => {
   });
 };
 
+/* https://docs.fondy.eu/en/docs/page/7/ */
 const refundPayment = async ({order_id, amount, currency}) => {
   const req = {
     order_id,
