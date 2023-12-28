@@ -59,6 +59,10 @@ const insertOrder = (order) => {
   orderDb[order.order_id] = order;
 };
 
+const getOrder = (order_id) => {
+  return orderDb[order_id];
+};
+
 const runServer = () => {
   // indent all
   const app = express();
@@ -73,7 +77,24 @@ const runServer = () => {
     console.log('response_url');
     console.log(req.body);
     const strBody = JSON.stringify(req.body, undefined, 2);
-    res.status(200).send(`<html><body><pre>${strBody}</pre></body></html>`);
+    res.status(200).send(
+      `<html><body>
+      <pre>${strBody}</pre>
+      <a href="http://localhost:3000/accept_booking/${req.body.order_id}">
+        <button>Accept Booking</button>
+      </a>
+      </body></html>`
+    );
+  });
+  app.get('/accept_booking/:order_id', (req, res) => {
+    console.log('accept_booking');
+    const order_id = req.params.order_id;
+    const strOrder = JSON.stringify(getOrder(order_id), undefined, 2);
+    res.status(200).send(
+      `<html><body>
+      <pre>${strOrder}</pre>
+      </body></html>`
+    );
   });
   
   app.listen(port, () => {
@@ -87,12 +108,14 @@ const run = async () => {
     order_desc: 'Stylist: Ganna',
     amount: 45200,
     currency: 'USD'};
+  insertOrder(order);
   const fondyReq = mkReq(order);
   const result = await callFondy({
     apiUrl: API_ACCEPT_PAYMENT_FLOW_B,
     req: withPreAuth(fondyReq)
   });
   console.log(result);
+  console.log(result.response.checkout_url);
   runServer();
 };
 
