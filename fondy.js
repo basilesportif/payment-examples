@@ -4,31 +4,57 @@ import express from 'express';
 import open from 'open';
 
 /* **** Fondy API Utils **** */
+const TEST_MERCHANT_ID = '1396424';
+const TEST_PASSWORD = 'test';
 const API_ACCEPT_PAYMENT_FLOW_B = 'https://api.fondy.eu/api/checkout/url/';
+const API_CAPTURE_PAYMENT = 'https://api.fondy.eu/api/capture/order_id/';
 
 // implements:  https://docs.fondy.eu/en/docs/page/3/#chapter-3-5
 // returns: original request with signature field added
-const getSignature = (req) => {
+const getSignature = (password, req) => {
   const sorted = Object.keys(req).sort().reduce((acc, key) => {
     acc[key] = req[key];
     return acc;
   }, {});
-  const joined = 'test|' + Object.keys(sorted).map(key => sorted[key]).join('|');
-  const hash = crypto.createHash('sha1');
-  hash.update(joined);
-  return { ...sorted, signature: hash.digest('hex') };
+  const joined = 
+    `${password}|` + 
+    Object.keys(sorted).map(key => sorted[key]).join('|');
+  const signature = crypto.createHash('sha1')
+    .update(joined)
+    .digest('hex');
+  return { ...sorted, signature };
 };
 
-const callFondy = async ({apiUrl, req}) => {
+const getTestSignature = (req) => {
+  return getSignature(TEST_PASSWORD, req);
+};
+
+const callFondyTest = async ({apiUrl, req}) => {
+  const signedReq = getTestSignature(req);
   const res = await 
     fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({request: getSignature(req)}),
+      body: JSON.stringify({request: signedReq}),
     });
   return await res.json();
+};
+
+const capturePayment = async ({order_id, rectoken, amount, currency}) => {
+  const req = {
+    order_id,
+    merchant_id: TEST_MERCHANT_ID,
+    rectoken,
+    amount,
+    currency,
+    version: "1.0",
+  };
+  return await callFondyTest({
+    apiUrl: API_CAPTURE_PAYMENT,
+    req
+  });
 };
 
 const mkReq = ({order_id, order_desc, amount, currency}) => {
@@ -37,7 +63,7 @@ const mkReq = ({order_id, order_desc, amount, currency}) => {
     order_desc,
     currency,
     amount,
-    merchant_id: '1396424',
+    merchant_id: TEST_MERCHANT_ID,
     server_callback_url: 'http://localhost:3000/server_callback_url',
     response_url: 'http://localhost:3000/response_url',
     sender_email: "tim@blah.com",
@@ -117,7 +143,7 @@ const run = async () => {
     currency: 'USD'};
   insertOrderDb(order);
   const fondyReq = mkReq(order);
-  const result = await callFondy({
+  const result = await callFondyTest({
     apiUrl: API_ACCEPT_PAYMENT_FLOW_B,
     req: withPreAuth(fondyReq)
   });
