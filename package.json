@@ -4,12 +4,13 @@
   "description": "Fondy and Stripe integration examples",
   "type": "module",
   "engines": {
-    "node": ">=16"
+    "node": ">=20"
   },
   "exports": "./index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "fondy": "node --no-warnings fondy.js"
+    "fondy": "node --no-warnings fondy.js",
+    "stripe": "node --no-warnings --env-file=.env stripe.js"
   },
   "repository": {
     "type": "git",
@@ -24,6 +25,7 @@
   "dependencies": {
     "express": "^4.18.2",
     "open": "^10.0.2",
+    "stripe": "^14.10.0",
     "uuid": "^9.0.1"
   }
 }

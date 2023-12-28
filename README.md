@@ -1,4 +1,5 @@
 # Payment Integration Examples
+Uses nodejs version 20 or greater.
 
 ## Stripe
 
