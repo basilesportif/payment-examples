@@ -2,6 +2,9 @@ const crypto = require('crypto');
 const { v4: uuidv4 } = require('uuid');
 const express = require('express');
 
+/* **** Fondy API Utils **** */
+const API_INTERACTION_B = 'https://api.fondy.eu/api/checkout/url/';
+
 // implements:  https://docs.fondy.eu/en/docs/page/3/#chapter-3-5
 // returns: original request with signature field added
 const getSignature = (req) => {
@@ -15,28 +18,30 @@ const getSignature = (req) => {
   return { ...sorted, signature: hash.digest('hex') };
 };
 
-const genReq = () => {
-  return {
-  "order_id": uuidv4(),
-  "order_desc":"test order 2",
-  "currency":"USD",
-  "amount":"125",
-  "merchant_id":"1396424",
-  "server_callback_url":"http://localhost:3000/server_callback_url",
-  "response_url":"http://localhost:3000/response_url",
-  "sender_email": "tim@blah.com",
-  }
-}
+const callFondy = async (apiUrl, fondyReq) => {
+  const res = await 
+    fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({request: getSignature(fondyReq)}),
+    });
+  return await res.json();
+};
 
-// signature: 91ea7da493a8367410fe3d7f877fb5e0ed666490
-const staticReq = {
-  "server_callback_url": "http://myshop/callback/",
-  "order_id": "TestOrder2",
-  "currency": "USD",
-  "merchant_id": "1396424",
-  "order_desc": "Test payment",
-  "amount": "1000",
-}
+const mkReq = (order_id, order_desc) => {
+  return {
+    order_id,
+    order_desc,
+    currency: 'USD',
+    amount: '45200',
+    merchant_id: '1396424',
+    server_callback_url: 'http://localhost:3000/server_callback_url',
+    response_url: 'http://localhost:3000/response_url',
+    sender_email: "tim@blah.com",
+  };
+};
 
 const withPreAuth = (fondyReq) => {
   return {
@@ -45,20 +50,8 @@ const withPreAuth = (fondyReq) => {
     required_rectoken: 'Y',
   };
 };
+/* **** end Fondy API Utils **** */
 
-const runInteractionB = async (fondyReq) => {
-  const res = await 
-    fetch('https://pay.fondy.eu/api/checkout/url', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({request: fondyReq}),
-    });
-  const json = await res.json();
-  console.log(json);
-  return json.response.checkout_url;
-};
 
 const runServer = () => {
   // indent all
@@ -83,13 +76,13 @@ const runServer = () => {
 };
 
 const run = async () => {
-  const fondyReq = genReq();
-  const withPreAuthReq = withPreAuth(fondyReq);
-  const checkout_url = await runInteractionB(getSignature(withPreAuthReq));
-  console.log(checkout_url);
+  const fondyReq = mkReq(uuidv4(), 'Stylist: Ganna');
+  const result = await callFondy(API_INTERACTION_B, withPreAuth(fondyReq));
+  console.log(result);
   runServer();
 };
 
+// use uuidv4() for order_id
 
 //TODO 
 // payoutStylistCard
