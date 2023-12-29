@@ -94,7 +94,7 @@ const doP2PPayment = async ({card, amount, currency}) => {
   });
 };
 
-const mkReq = ({order_id, order_desc, amount, currency}) => {
+const mkReq = ({order_id, order_desc, email, amount, currency}) => {
   return {
     order_id,
     order_desc,
@@ -103,7 +103,7 @@ const mkReq = ({order_id, order_desc, amount, currency}) => {
     merchant_id: TEST_MERCHANT_ID,
     server_callback_url: 'http://localhost:3000/server_callback_url',
     response_url: 'http://localhost:3000/response_url',
-    sender_email: "tim@blah.com",
+    sender_email: email,
   };
 };
 
@@ -204,14 +204,39 @@ const runServer = () => {
       amount: req.params.amount,
       currency: 'USD',
     });
-    const strResult = JSON.stringify(result, undefined, 2);
     res.send(
       `<html><body>
-      <pre>${strResult}</pre>
+      <pre>${JSON.stringify(result, undefined, 2)}</pre>
       </body></html>`
     );
   });
-
+  app.post('/new_order', async (req, res) => {
+    const order = {
+      order_id: uuidv4(),
+      order_desc: 'Stylist: Ganna',
+      email: req.body.email,
+      amount: req.body.amount,
+      currency: 'USD'};
+    insertOrderDb(order);
+    const fondyReq = mkReq(order);
+    const result = await callFondy({
+      password: TEST_PASSWORD,
+      apiUrl: API_ACCEPT_PAYMENT_FLOW_B,
+      req: withPreAuth(fondyReq)
+    });
+    console.log(result);
+    if (result.response.response_status === 'success') {
+      res.redirect(result.response.checkout_url);
+    }
+    else {
+      const strResult = JSON.stringify(result, undefined, 2);
+      res.send(
+        `<html><body>
+        <pre>${strResult}</pre>
+        </body></html>`
+      );
+    }
+  });
   app.get('/home', (req, res) => {
     const card1 = "4444555566661111";
     const amount = "42000";
@@ -220,6 +245,15 @@ const runServer = () => {
       <a href="http://localhost:3000/p2p_payment/${card1}/${amount}">
         <button>Payout $${amount/100.0} to ${card1}</button>
       </a>
+      <br/>
+      <br/>
+      <form action="/new_order" method="post">
+        <label for="amount">Amount:</label><br>
+        <input type="text" id="amount" name="amount" value="45200"><br>
+        <label for="email">Email:</label><br>
+        <input type="text" id="email" name="email" value="tim@blah.com"/><br/>
+        <input type="submit" value="do new Order"/>
+      </form>
       </body></html>`
     );
   });
@@ -230,28 +264,8 @@ const runServer = () => {
 };
 
 const run = async () => {
-  const order = {
-    order_id: uuidv4(),
-    order_desc: 'Stylist: Ganna',
-    amount: 45200,
-    currency: 'USD'};
-  insertOrderDb(order);
-  const fondyReq = mkReq(order);
-  const result = await callFondy({
-    password: TEST_PASSWORD,
-    apiUrl: API_ACCEPT_PAYMENT_FLOW_B,
-    req: withPreAuth(fondyReq)
-  });
-  console.log(result);
-  //open(result.response.checkout_url);  //open in default browser
   open("http://localhost:3000/home");
   runServer();
 };
-
-// use uuidv4() for order_id
-
-//TODO 
-// payoutStylistCard
-// captureForStylistCard
 
 run();
