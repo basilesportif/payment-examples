@@ -6,6 +6,7 @@ import open from 'open';
 /* **** Fondy API Utils **** */
 const TEST_MERCHANT_ID = '1396424';
 const TEST_PASSWORD = 'test';
+const TEST_CREDIT_PASSWORD = 'testcredit';
 const API_ACCEPT_PAYMENT_FLOW_B = 'https://api.fondy.eu/api/checkout/url/';
 const API_CAPTURE_PAYMENT = 'https://api.fondy.eu/api/capture/order_id/';
 const API_REFUND_PAYMENT = 'https://api.fondy.eu/api/reverse/order_id/';
@@ -26,12 +27,8 @@ const getSignature = (password, req) => {
   return { ...sorted, signature };
 };
 
-const getTestSignature = (req) => {
-  return getSignature(TEST_PASSWORD, req);
-};
-
-const callFondyTest = async ({apiUrl, req}) => {
-  const signedReq = getTestSignature(req);
+const callFondy = async ({password, apiUrl, req}) => {
+  const signedReq = getSignature(password, req);
   const res = await 
     fetch(apiUrl, {
       method: 'POST',
@@ -53,7 +50,8 @@ const capturePayment = async ({order_id, amount, currency}) => {
     version: "1.0",
   };
   console.log(req);
-  return await callFondyTest({
+  return await callFondy({
+    password: TEST_PASSWORD,
     apiUrl: API_CAPTURE_PAYMENT,
     req
   });
@@ -70,7 +68,8 @@ const refundPayment = async ({order_id, amount, currency}) => {
     comment: "stylist rejected booking",
   };
   console.log(req);
-  return await callFondyTest({
+  return await callFondy({
+    password: TEST_PASSWORD,
     apiUrl: API_REFUND_PAYMENT,
     req
   });
@@ -195,7 +194,8 @@ const run = async () => {
     currency: 'USD'};
   insertOrderDb(order);
   const fondyReq = mkReq(order);
-  const result = await callFondyTest({
+  const result = await callFondy({
+    password: TEST_PASSWORD,
     apiUrl: API_ACCEPT_PAYMENT_FLOW_B,
     req: withPreAuth(fondyReq)
   });
