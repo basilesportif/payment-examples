@@ -10,6 +10,7 @@ const TEST_CREDIT_PASSWORD = 'testcredit';
 const API_ACCEPT_PAYMENT_FLOW_B = 'https://api.fondy.eu/api/checkout/url/';
 const API_CAPTURE_PAYMENT = 'https://api.fondy.eu/api/capture/order_id/';
 const API_REFUND_PAYMENT = 'https://api.fondy.eu/api/reverse/order_id/';
+const API_P2P_CREDIT = 'https://api.fondy.eu/api/p2pcredit/';
 
 // implements:  https://docs.fondy.eu/en/docs/page/3/#chapter-3-5
 // returns: original request with signature field added
@@ -71,6 +72,24 @@ const refundPayment = async ({order_id, amount, currency}) => {
   return await callFondy({
     password: TEST_PASSWORD,
     apiUrl: API_REFUND_PAYMENT,
+    req
+  });
+};
+
+const doP2PPayment = async ({card, amount, currency}) => {
+  const req = {
+    order_id: uuidv4(),
+    order_desc: `payment to ${card}`,
+    amount,
+    currency,
+    version: "1.0",
+    receiver_card_number: card,
+    merchant_id: TEST_MERCHANT_ID,
+  };
+  console.log(req);
+  return await callFondy({
+    password: TEST_CREDIT_PASSWORD,
+    apiUrl: API_P2P_CREDIT,
     req
   });
 };
@@ -141,7 +160,6 @@ const runServer = () => {
     );
   });
   app.get('/accept_booking/:order_id', async (req, res) => {
-    console.log('accept_booking');
     const order = getOrderDb(req.params.order_id);
     let strResult;
     if (order.preauth) {
@@ -161,7 +179,6 @@ const runServer = () => {
     );
   });
   app.get('/reject_booking/:order_id', async (req, res) => {
-    console.log('reject_booking');
     const order = getOrderDb(req.params.order_id);
     let strResult;
     if (order.preauth) {
@@ -177,6 +194,32 @@ const runServer = () => {
       `<html><body>
       <pre>${strOrder}</pre>
       <pre>${strResult}</pre>
+      </body></html>`
+    );
+  });
+  app.get('/p2p_payment/:card/:amount', async (req, res) => {
+    const card = req.params.card;
+    const result = await doP2PPayment({
+      card,
+      amount: req.params.amount,
+      currency: 'USD',
+    });
+    const strResult = JSON.stringify(result, undefined, 2);
+    res.send(
+      `<html><body>
+      <pre>${strResult}</pre>
+      </body></html>`
+    );
+  });
+
+  app.get('/home', (req, res) => {
+    const card1 = "4444555566661111";
+    const amount = "42000";
+    res.send(
+      `<html><body>
+      <a href="http://localhost:3000/p2p_payment/${card1}/${amount}">
+        <button>Payout $${amount/100.0} to ${card1}</button>
+      </a>
       </body></html>`
     );
   });
@@ -200,7 +243,8 @@ const run = async () => {
     req: withPreAuth(fondyReq)
   });
   console.log(result);
-  open(result.response.checkout_url);  //open in default browser
+  //open(result.response.checkout_url);  //open in default browser
+  open("http://localhost:3000/home");
   runServer();
 };
 
