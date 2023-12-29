@@ -2,37 +2,33 @@ import express from 'express';
 import open from 'open';
 import Stripe from 'stripe';
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-console.log(process.env.STRIPE_SECRET_KEY);
 const PORT = 3001;
 
-
+/ * Stripe API Utils * /
 const createAccount = async ({email, country}) => {
+  let service_agreement;
+  if (country === 'US') {
+    service_agreement = 'full';
+  }
+  else {
+    service_agreement = 'recipient';
+  }
   const account = await stripe.accounts.create({
     type: 'express',
     email,
     country,
     tos_acceptance: {
-      service_agreement: 'recipient',
+      service_agreement,
+    },
+    capabilities: {
+      transfers: {
+        requested: true,  
+      },
     },
   });
+  return account;
 };
-
-/* Stripe flow */
-/* 
- * Connect a stylist
- *  - create a stripe account
- *  - check status of stripe account
- 
- * Do a customer payment
- * - create a payment intent
- * - open page
- * - redirect after payment done
- 
- * Homepage
- * click to create a stylist account and send them through the flow
- * choose a stylist to do a payment to
- * view all connected accounts
-*/
+/* end Stripe API Utils */
 
 const runServer = () => {
   const app = express();
@@ -40,8 +36,18 @@ const runServer = () => {
   const domain = `http://localhost:${port}`;
   app.use(express.urlencoded({ extended: true }));
 
-  app.get('/', (req, res) => {
-    console.log('homepage');
+  app.get('/home', async (req, res) => {
+    const accounts = await stripe.accounts.list({ limit: 10 });
+    let table = "<table>";
+    for (const account of accounts.data) {
+      table += "<tr>";
+      // TODO: id, requirements, charges_enabled, payouts_enabled
+      table += `<td>id</td><td>${account.id}</td>`;
+      table += `<td>email</td><td>${account.email}</td>`;
+      table += `<td>country</td><td>${account.country}</td>`;
+      table += "</tr>";
+    }
+    table += "</table>";
     res.send(
       `<html><body>
       <form action="${domain}/create_stylist" method="post">
@@ -50,12 +56,13 @@ const runServer = () => {
 
         <label for="country">Country:</label>
         <select id="country" name="country" required>
-          <option value="UA">Ukraine</option>
           <option value="US">USA</option>
+          <option value="UA">Ukraine</option>
           <option value="KZ">Kazakhstan</option>
         </select>
         <input type="submit" value="Create Stylist">
       </form>
+      ${table}
       </body></html>`
     );
   });
@@ -63,11 +70,35 @@ const runServer = () => {
     console.log('create_stylist');
     console.log(req.body);
     const { email, country } = req.body;
-    /*
-    const account = await createAccount({ email, country });
+    let account;
+    try {
+      account = await createAccount({ email, country });
+      console.log(account);
+    } catch (err) {
+      console.log(err);
+      res.send(`
+        <html><body>
+        <div>Failed to create stylist ${email} ${country}</div>
+        <pre>${JSON.stringify(err, undefined, 2)}</pre>
+        </body></html>
+      `);
+      return;
+    }
     console.log(account);
-    */
-    res.send(`create_stylist ${email} ${country}`);
+    const accountLink = await stripe.accountLinks.create({
+      account: account.id,
+      refresh_url: `${domain}/reauth/${account.id}`,
+      return_url: `${domain}/return/${account.id}`,
+      type: 'account_onboarding',
+    });
+    res.send(`
+      <html><body>
+      <div>Created stylist ${email} ${country}, id ${account.id}</div>
+      <a href="${accountLink.url}">
+        <button>Complete onboarding</button>
+      </a>
+      </body></html>
+    `);
   });
   app.get('/reauth/:accountId', (req, res) => {
     console.log('reauth');
@@ -100,16 +131,8 @@ const printAccounts = (accounts) => {
 
 
 const run = async () => {
-  const accountId = 'acct_1OSLWXH8xIAoOsZC';
-  const accountLink = await stripe.accountLinks.create({
-    account: accountId,
-    refresh_url: `http://localhost:${PORT}/reauth/${accountId}`,
-    return_url: `http://localhost:${PORT}/return/${accountId}`,
-    type: 'account_onboarding',
-  });
-  console.log(accountLink);
   //open(accountLink.url);
-  const accounts = await stripe.accounts.list({ limit: 10 });
+  open(`http://localhost:${PORT}/home`);
   runServer();
 };
 
