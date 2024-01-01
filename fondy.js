@@ -219,6 +219,7 @@ const runServer = () => {
       currency: 'USD'};
     insertOrderDb(order);
     const fondyReq = mkReq(order);
+    console.log(withPreAuth(fondyReq));
     const result = await callFondy({
       password: TEST_PASSWORD,
       apiUrl: API_ACCEPT_PAYMENT_FLOW_B,
@@ -252,7 +253,7 @@ const runServer = () => {
         <input type="text" id="amount" name="amount" value="45200"><br>
         <label for="email">Email:</label><br>
         <input type="text" id="email" name="email" value="tim@blah.com"/><br/>
-        <input type="submit" value="do new Order"/>
+        <input type="submit" value="preauthorize new booking"/>
       </form>
       </body></html>`
     );
