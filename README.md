@@ -2,6 +2,9 @@
 Uses nodejs version 20 or greater.
 
 ## Stripe
+Notes
+* Stripe can go to `reauth` URL even when creation succeeded. Need to
+  check requirements on the account.
 
 ## Fondy
 Fondy marketplaces are implemented as a hack. Fondy uses their base

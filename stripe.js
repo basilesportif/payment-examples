@@ -4,6 +4,15 @@ import Stripe from 'stripe';
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const PORT = 3001;
 
+const getAccountLink = async (domain, accountId) => {
+  const accountLink = await stripe.accountLinks.create({
+    account: accountId,
+    refresh_url: `${domain}/reauth/${accountId}`,
+    return_url: `${domain}/return/${accountId}`,
+    type: 'account_onboarding',
+  });
+  return accountLink;
+};
 / * Stripe API Utils * /
 const createAccount = async ({email, country}) => {
   let service_agreement;
@@ -13,7 +22,7 @@ const createAccount = async ({email, country}) => {
   else {
     service_agreement = 'recipient';
   }
-  const account = await stripe.accounts.create({
+  const account_params = {
     type: 'express',
     email,
     country,
@@ -25,7 +34,9 @@ const createAccount = async ({email, country}) => {
         requested: true,  
       },
     },
-  });
+  };
+  console.log(account_params);
+  const account = await stripe.accounts.create(account_params);
   return account;
 };
 /* end Stripe API Utils */
@@ -35,16 +46,30 @@ const runServer = () => {
   const port = PORT;
   const domain = `http://localhost:${port}`;
   app.use(express.urlencoded({ extended: true }));
+  app.use(express.json());
 
   app.get('/home', async (req, res) => {
     const accounts = await stripe.accounts.list({ limit: 10 });
-    let table = "<table>";
+    let table = "<table border='1' padding='1'>";
+    table += "<tr>";
+    table += `<td>id</td>`;
+    table += `<td>email</td>`;
+    table += `<td>country</td>`;
+    table += `<td>Status</td>`;
+    table += "</tr>";
     for (const account of accounts.data) {
+      const accountLink = await getAccountLink(domain, account.id);
       table += "<tr>";
       // TODO: id, requirements, charges_enabled, payouts_enabled
-      table += `<td>id</td><td>${account.id}</td>`;
-      table += `<td>email</td><td>${account.email}</td>`;
-      table += `<td>country</td><td>${account.country}</td>`;
+      table += `<td>${account.id}</td>`;
+      table += `<td>${account.email}</td>`;
+      table += `<td>${account.country}</td>`;
+      if (account.requirements.currently_due.length === 0) {
+        table += `<td>Onboarded</td>`;
+      }
+      else {
+        table += `<td><a href="${accountLink.url}">Onboard</a></td>`;
+      }
       table += "</tr>";
     }
     table += "</table>";
@@ -59,6 +84,10 @@ const runServer = () => {
           <option value="US">USA</option>
           <option value="UA">Ukraine</option>
           <option value="KZ">Kazakhstan</option>
+          <option value="IT">Italy</option>
+          <option value="FR">France</option>
+          <option value="DE">Germany</option>
+          <option value="UK">United Kingdom</option>
         </select>
         <input type="submit" value="Create Stylist">
       </form>
@@ -85,12 +114,7 @@ const runServer = () => {
       return;
     }
     console.log(account);
-    const accountLink = await stripe.accountLinks.create({
-      account: account.id,
-      refresh_url: `${domain}/reauth/${account.id}`,
-      return_url: `${domain}/return/${account.id}`,
-      type: 'account_onboarding',
-    });
+    const accountLink = await getAccountLink(domain, account.id);
     res.send(`
       <html><body>
       <div>Created stylist ${email} ${country}, id ${account.id}</div>
@@ -103,12 +127,23 @@ const runServer = () => {
   app.get('/reauth/:accountId', (req, res) => {
     console.log('reauth');
     console.log(req.params.accountId);
-    res.send(`reauth ${req.params.accountId}`);
+    res.send(`reauth ${req.params.accountId}
+      <br>
+      <a href="${domain}/home">Home</a>
+      `);
   });
   app.get('/return/:accountId', (req, res) => {
     console.log('return');
     console.log(req.params.accountId);
-    res.send(`return ${req.params.accountId}`);
+    res.send(`return ${req.params.accountId}
+      <br>
+      <a href="${domain}/home">Home</a>
+    `);
+  });
+  app.post('/webhook', async (req, res) => {
+    console.log('------webhook-------');
+    console.log(req.body);
+    res.send('webhook');
   });
 
   app.listen(port, () => {
