@@ -1,6 +1,7 @@
 import express from 'express';
 import open from 'open';
 import Stripe from 'stripe';
+import { v4 as uuidv4 } from 'uuid';
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const PORT = 3001;
 
@@ -14,7 +15,7 @@ const getAccountLink = async (domain, accountId) => {
   return accountLink;
 };
 / * Stripe API Utils * /
-const createAccount = async ({email, country}) => {
+const createAccount = async ({platformId, email, country}) => {
   let service_agreement;
   if (country === 'US') {
     service_agreement = 'full';
@@ -26,6 +27,9 @@ const createAccount = async ({email, country}) => {
     type: 'express',
     email,
     country,
+    business_profile: {
+      url: `https://mush.style/${platformId}`,
+    },
     tos_acceptance: {
       service_agreement,
     },
@@ -98,10 +102,11 @@ const runServer = () => {
   app.post('/create_stylist', async (req, res) => {
     console.log('create_stylist');
     console.log(req.body);
+    const platformId = uuidv4();
     const { email, country } = req.body;
     let account;
     try {
-      account = await createAccount({ email, country });
+      account = await createAccount({ platformId, email, country });
       console.log(account);
     } catch (err) {
       console.log(err);
