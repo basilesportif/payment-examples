@@ -38,6 +38,13 @@ const createAccount = async ({platformId, email, country}) => {
         requested: true,  
       },
     },
+    settings: {
+      payouts: {
+        schedule: {
+          interval: 'manual',
+        },
+      },
+    },
   };
   console.log(account_params);
   const account = await stripe.accounts.create(account_params);
@@ -52,6 +59,10 @@ const runServer = () => {
   app.use(express.urlencoded({ extended: true }));
   app.use(express.json());
 
+  app.get('payment_flow', async (req, res) => {
+    const merchantId = 'acct_1OUsMTIdo1igeWBZ';
+  });
+
   app.get('/home', async (req, res) => {
     const accounts = await stripe.accounts.list({ limit: 10 });
     let table = "<table border='1' padding='1'>";
@@ -59,7 +70,9 @@ const runServer = () => {
     table += `<td>id</td>`;
     table += `<td>email</td>`;
     table += `<td>country</td>`;
+    table += `<td>Express Dashboard</td>`;
     table += `<td>Status</td>`;
+    table += `<td>Payout Interval</td>`;
     table += "</tr>";
     for (const account of accounts.data) {
       const accountLink = await getAccountLink(domain, account.id);
@@ -69,9 +82,13 @@ const runServer = () => {
       table += `<td>${account.email}</td>`;
       table += `<td>${account.country}</td>`;
       if (account.requirements.currently_due.length === 0) {
+        const loginLink = await stripe.accounts.createLoginLink(account.id);
+        table += `<td><a href="${loginLink.url}">Express Dashboard</a></td>`;
         table += `<td>Onboarded</td>`;
+        table += `<td><pre>${JSON.stringify(account.settings.payouts.schedule.interval, undefined, 2)}</pre></td>`;
       }
       else {
+        table += `<td>n/a</td>`;
         table += `<td><a href="${accountLink.url}">Onboard</a></td>`;
       }
       table += "</tr>";
@@ -137,9 +154,12 @@ const runServer = () => {
       <a href="${domain}/home">Home</a>
       `);
   });
-  app.get('/return/:accountId', (req, res) => {
+  app.get('/return/:accountId', async (req, res) => {
     console.log('return');
     console.log(req.params.accountId);
+    const account = stripe.accounts.retrieve(req.params.accountId);
+    console.log('onboarded');
+
     res.send(`return ${req.params.accountId}
       <br>
       <a href="${domain}/home">Home</a>
@@ -155,20 +175,6 @@ const runServer = () => {
     console.log(`Stripe app listening at ${domain}`);
   });
 };
-
-const printAccounts = (accounts) => {
-  console.log(accounts.data.map(account => [ 
-    account.id,
-    account.email,
-    account.country,
-    account.requirements.disabled_reason,
-    account.requirements.current_deadline,
-    account.requirements.past_due,
-    account.requirements.currently_due,
-    account.requirements.eventually_due,
-  ]));
-};
-
 
 const run = async () => {
   //open(accountLink.url);
