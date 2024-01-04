@@ -73,6 +73,8 @@ const runServer = () => {
     table += `<td>Express Dashboard</td>`;
     table += `<td>Status</td>`;
     table += `<td>Payout Interval</td>`;
+    table += `<td>charges_enabled</td>`;
+    table += `<td>payouts_enabled</td>`;
     table += "</tr>";
     for (const account of accounts.data) {
       const accountLink = await getAccountLink(domain, account.id);
@@ -91,6 +93,8 @@ const runServer = () => {
         table += `<td>n/a</td>`;
         table += `<td><a href="${accountLink.url}">Onboard</a></td>`;
       }
+      table += `<td>${account.charges_enabled}</td>`;
+      table += `<td>${account.payouts_enabled}</td>`;
       table += "</tr>";
     }
     table += "</table>";
