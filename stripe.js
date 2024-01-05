@@ -74,12 +74,19 @@ const runServer = () => {
     `);
   });
   app.post('/create_payment_intent', async (req, res) => {
+    const merchantId = 'acct_1OUsMTIdo1igeWBZ';
+    const platformFeeRate = 0.1;
+    const amount = 1492;
+    const application_fee_amount = Math.round(amount * platformFeeRate);
     const { items } = req.body;
-    //TODO: put merchant id here and try to do destination payment
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: 1492,
+      amount,
+      application_fee_amount, 
       currency: 'usd',
       capture_method: 'manual',
+      transfer_data: {
+        destination: merchantId,
+      },
     });
     res.send({
       clientSecret: paymentIntent.client_secret,
