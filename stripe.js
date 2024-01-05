@@ -60,6 +60,15 @@ const runServer = () => {
   app.use(express.json());
   app.use(express.static('public'));
 
+  app.get('/payment_return', async (req, res) => {
+    const pi_id = req.query.payment_intent;
+    const paymentIntent = await stripe.paymentIntents.retrieve(pi_id);
+    res.send(`
+      <html><body>
+      <pre>${JSON.stringify(paymentIntent, undefined, 2)}</pre>
+      </body></html>
+    `);
+  });
   app.post('/create_payment_intent', async (req, res) => {
     const { items } = req.body;
     const paymentIntent = await stripe.paymentIntents.create({
