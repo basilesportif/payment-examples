@@ -62,11 +62,16 @@ const runServer = () => {
 
   app.get('/capture_payment/:payment_intent_id', async (req, res) => {
     var intent = await stripe.paymentIntents.retrieve(req.params.payment_intent_id);
+    var refund_button = '';
     if (intent.status === 'requires_capture') {
       intent = await stripe.paymentIntents.capture(req.params.payment_intent_id);
+      refund_button = `<a href="http://localhost:3001/refund_payment/${req.params.payment_intent_id}">
+        <button>Refund Payment</button>
+      </a>`;
     }
     res.send(`
       <html><body>
+      ${refund_button}
       <pre>${JSON.stringify(intent.status, undefined, 2)}</pre>
       <pre>${JSON.stringify(intent, undefined, 2)}</pre>
       </body></html>
@@ -82,6 +87,22 @@ const runServer = () => {
         intent.status === 'requires_action' || 
         intent.status === 'processing') {
       intent = await stripe.paymentIntents.cancel(req.params.payment_intent_id);
+    }
+    res.send(`
+      <html><body>
+      <pre>${JSON.stringify(intent.status, undefined, 2)}</pre>
+      <pre>${JSON.stringify(intent, undefined, 2)}</pre>
+      </body></html>
+    `);
+  });
+  app.get('/refund_payment/:payment_intent_id', async (req, res) => {
+    //TODO: can get   type: 'StripeInvalidRequestError' if already
+    //refunded
+    var intent = await stripe.paymentIntents.retrieve(req.params.payment_intent_id);
+    if (intent.status === 'succeeded') {
+      intent = await stripe.refunds.create({
+        payment_intent: req.params.payment_intent_id,
+      });
     }
     res.send(`
       <html><body>
