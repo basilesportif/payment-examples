@@ -63,6 +63,12 @@ const runServer = () => {
   app.get('/payment_return', async (req, res) => {
     const pi_id = req.query.payment_intent;
     const paymentIntent = await stripe.paymentIntents.retrieve(pi_id);
+    //TODO: capture payment here
+    /*
+     const intent = await stripe.paymentIntents.capture(pi_id, {
+       amount_to_capture: 750,
+      });
+*/
     res.send(`
       <html><body>
       <pre>${JSON.stringify(paymentIntent, undefined, 2)}</pre>
@@ -71,6 +77,7 @@ const runServer = () => {
   });
   app.post('/create_payment_intent', async (req, res) => {
     const { items } = req.body;
+    //TODO: put merchant id here and try to do destination payment
     const paymentIntent = await stripe.paymentIntents.create({
       amount: 1492,
       currency: 'usd',
