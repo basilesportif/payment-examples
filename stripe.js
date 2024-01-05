@@ -58,7 +58,19 @@ const runServer = () => {
   const domain = `http://localhost:${port}`;
   app.use(express.urlencoded({ extended: true }));
   app.use(express.json());
+  app.use(express.static('public'));
 
+  app.post('/create_payment_intent', async (req, res) => {
+    const { items } = req.body;
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: 1492,
+      currency: 'usd',
+      capture_method: 'manual',
+    });
+    res.send({
+      clientSecret: paymentIntent.client_secret,
+    });
+  });
   app.get('/payment_flow', async (req, res) => {
     const merchantId = 'acct_1OUsMTIdo1igeWBZ';
     const paymentIntent = await stripe.paymentIntents.create({
@@ -197,7 +209,8 @@ const runServer = () => {
 const run = async () => {
   //open(accountLink.url);
   //open(`http://localhost:${PORT}/home`);
-  open(`http://localhost:${PORT}/payment_flow`);
+  //open(`http://localhost:${PORT}/payment_flow`);
+  open(`http://localhost:${PORT}/checkout.html`);
   runServer();
 };
 
