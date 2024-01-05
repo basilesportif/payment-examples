@@ -60,16 +60,43 @@ const runServer = () => {
   app.use(express.json());
   app.use(express.static('public'));
 
-  app.get('/payment_return', async (req, res) => {
-    const pi_id = req.query.payment_intent;
-    const paymentIntent = await stripe.paymentIntents.retrieve(pi_id);
-    const intent = await stripe.paymentIntents.capture(pi_id, {
-      amount_to_capture: paymentIntent.amount,
-    });
+  app.get('/capture_payment/:payment_intent_id', async (req, res) => {
+    var intent = await stripe.paymentIntents.retrieve(req.params.payment_intent_id);
+    if (intent.status === 'requires_capture') {
+      intent = await stripe.paymentIntents.capture(req.params.payment_intent_id);
+    }
     res.send(`
       <html><body>
       <pre>${JSON.stringify(intent.status, undefined, 2)}</pre>
       <pre>${JSON.stringify(intent, undefined, 2)}</pre>
+      </body></html>
+    `);
+  });
+  app.get('/cancel_payment/:payment_intent_id', async (req, res) => {
+    var intent = await stripe.paymentIntents.retrieve(req.params.payment_intent_id);
+    // match following statuses:
+    // requires_payment_method, requires_capture, requires_confirmation, requires_action, processing
+    if (intent.status === 'requires_payment_method' || 
+        intent.status === 'requires_capture' || 
+        intent.status === 'requires_confirmation' || 
+        intent.status === 'requires_action' || 
+        intent.status === 'processing') {
+      intent = await stripe.paymentIntents.cancel(req.params.payment_intent_id);
+    }
+    res.send(`
+      <html><body>
+      <pre>${JSON.stringify(intent.status, undefined, 2)}</pre>
+      <pre>${JSON.stringify(intent, undefined, 2)}</pre>
+      </body></html>
+    `);
+  });
+
+  app.get('/payment_return', async (req, res) => {
+    const pi_id = req.query.payment_intent;
+    res.send(`
+      <html><body>
+        <a href="/capture_payment/${pi_id}"><button>Capture Payment</button></a>
+        <a href="/cancel_payment/${pi_id}"><button>Cancel Payment</button></a>
       </body></html>
     `);
   });
