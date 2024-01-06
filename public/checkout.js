@@ -15,10 +15,12 @@ document
 
 // Fetches a payment intent and captures the client secret
 async function initialize() {
+  // get amount from query params as a number
+  const amount = Number(new URLSearchParams(window.location.search).get("amount"));
   const response = await fetch("/create_payment_intent", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ items }),
+    body: JSON.stringify({ amount: amount }),
   });
   const { clientSecret } = await response.json();
 

@@ -102,6 +102,8 @@ const runServer = () => {
     if (intent.status === 'succeeded') {
       intent = await stripe.refunds.create({
         payment_intent: req.params.payment_intent_id,
+        refund_application_fee: true,
+        reverse_transfer: true,
       });
     }
     res.send(`
@@ -122,11 +124,10 @@ const runServer = () => {
     `);
   });
   app.post('/create_payment_intent', async (req, res) => {
-    const merchantId = 'acct_1OUsMTIdo1igeWBZ';
+    const merchantId = 'acct_1OVXQDIAKCZWBuAI';
     const platformFeeRate = 0.1;
-    const amount = 1492;
+    const { amount } = req.body;
     const application_fee_amount = Math.round(amount * platformFeeRate);
-    const { items } = req.body;
     const paymentIntent = await stripe.paymentIntents.create({
       amount,
       application_fee_amount, 
@@ -160,6 +161,7 @@ const runServer = () => {
 
   app.get('/home', async (req, res) => {
     const accounts = await stripe.accounts.list({ limit: 10 });
+    const amount = 15000;
     let table = "<table border='1' padding='1'>";
     table += "<tr>";
     table += `<td>id</td>`;
@@ -211,6 +213,9 @@ const runServer = () => {
         </select>
         <input type="submit" value="Create Stylist">
       </form>
+      <br/>
+      <a href="/checkout.html?amount=${amount}"><button>Checkout for $${amount / 100.0}</button></a>
+      <br/>
       ${table}
       </body></html>`
     );
@@ -277,9 +282,9 @@ const runServer = () => {
 
 const run = async () => {
   //open(accountLink.url);
-  //open(`http://localhost:${PORT}/home`);
+  open(`http://localhost:${PORT}/home`);
   //open(`http://localhost:${PORT}/payment_flow`);
-  open(`http://localhost:${PORT}/checkout.html`);
+  //open(`http://localhost:${PORT}/checkout.html`);
   runServer();
 };
 
