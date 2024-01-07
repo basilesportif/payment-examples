@@ -101,7 +101,7 @@ const mkReq = ({order_id, order_desc, email, amount, currency}) => {
     currency,
     amount,
     merchant_id: TEST_MERCHANT_ID,
-    server_callback_url: 'http://localhost:3000/server_callback_url',
+    server_callback_url: 'http://116.203.79.97:3000/server_callback_url',
     response_url: 'http://localhost:3000/response_url',
     sender_email: email,
   };
@@ -138,7 +138,11 @@ const runServer = () => {
   
   app.post('/server_callback_url', (req, res) => {
     console.log('server_callback_url');
-    res.send('server_callback_url');
+    res.send(`
+      <html><body>
+      <pre>${JSON.stringify(req.body, undefined, 2)}</pre>
+      </body></html>
+    `);
   });
   app.post('/response_url', (req, res) => {
     console.log('response_url');
