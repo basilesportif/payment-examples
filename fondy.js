@@ -135,9 +135,11 @@ const runServer = () => {
   const app = express();
   const port = 3000;
   app.use(express.urlencoded({ extended: true }));
+  app.use(express.json());
   
   app.post('/server_callback_url', (req, res) => {
     console.log('server_callback_url');
+    console.log(req.body);
     res.send(`
       <html><body>
       <pre>${JSON.stringify(req.body, undefined, 2)}</pre>
