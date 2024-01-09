@@ -295,6 +295,7 @@ const runServer = () => {
     const platformFeeRate = 0.1;
     const amount = 15120;
     const application_fee_amount = Math.round(amount * platformFeeRate);
+    // example array: line_items[0][price]:w
     const intent = {
       amount,
       application_fee_amount,
@@ -314,7 +315,7 @@ const runServer = () => {
     `);
   });
 
-  app.post('/webhook', async (req, res) => {
+  app.post('/stripe_webhooks', async (req, res) => {
     console.log('------webhook-------');
     console.log(req.body);
     res.send('webhook');
