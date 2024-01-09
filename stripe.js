@@ -303,10 +303,13 @@ const runServer = () => {
     `);
   });
   app.get('/checkout', async (req, res) => {
+    /*
+     * Example of how to get a PaymentIntent from a PaymentIntent ID
     const apiUrl = `https://api.stripe.com/v1/payment_intents`;
     const piId = 'pi_3OWge1IhzJLcQFgD0HxkzPzw';
     const intent = await callStripeGet(`${apiUrl}/${piId}`);
     console.log(intent);
+    */
 
     const merchantId = 'acct_1OVXQDIAKCZWBuAI';
     const stylistName = 'Anna Galebach';
@@ -314,7 +317,7 @@ const runServer = () => {
     const platformFeeRate = 0.1;
     const amount = 15120;
     const application_fee_amount = Math.round(amount * platformFeeRate);
-    // example array: line_items[0][price]:w
+    // example array: line_items[0][price]
     const session = {
       'mode': 'payment',
       'success_url': `${domain}/success`,
@@ -325,7 +328,7 @@ const runServer = () => {
       'payment_intent_data[application_fee_amount]': application_fee_amount,
       'payment_intent_data[capture_method]': 'manual',
       'payment_intent_data[transfer_data][destination]': merchantId,
-      'payment_intent_data[metadata][stylistId]': merchantId,
+      'payment_intent_data[metadata][stylist-id]': merchantId,
       'payment_intent_data[metadata][service]': service,
     }
     const json = await callStripe(
@@ -349,8 +352,7 @@ const runServer = () => {
     console.log('------webhook-------');
     const obj = req.body.data.object;
     console.log(req.body.type);
-    if (obj.type === 'payment_intent.created' ||
-        obj.type === 'payment_intent.amount_capturable_updated') {
+    if (req.body.type === 'payment_intent.amount_capturable_updated') {
       const intent = await stripe.paymentIntents.retrieve(obj.id);
       console.log(intent);
       console.log(intent.metadata);
