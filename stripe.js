@@ -14,7 +14,28 @@ const getAccountLink = async (domain, accountId) => {
   });
   return accountLink;
 };
-/ * Stripe API Utils * /
+
+// params is a JSON object: { "transfer_data[destination]": merchId }
+const callStripe = async (uri, params) => {
+  const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+  var formBody = [];
+  for (var k in params) {
+    formBody.push(`${encodeURIComponent(k)}=${encodeURIComponent(params[k])}`);
+  }
+  formBody = formBody.join('&');
+  const response = await fetch(uri, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${stripeSecretKey}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
+        Accept: 'application/json',
+      },
+      body: formBody,
+  });
+  return await response.json();
+};
+
+/* Stripe API Utils */
 const createAccount = async ({platformId, email, country}) => {
   let service_agreement;
   if (country === 'US') {
@@ -269,6 +290,30 @@ const runServer = () => {
       <a href="${domain}/home">Home</a>
     `);
   });
+  app.get('/checkout', async (req, res) => {
+    const merchantId = 'acct_1OVXQDIAKCZWBuAI';
+    const platformFeeRate = 0.1;
+    const amount = 15120;
+    const application_fee_amount = Math.round(amount * platformFeeRate);
+    const intent = {
+      amount,
+      application_fee_amount,
+      currency: 'usd',
+      capture_method: 'manual',
+      "transfer_data[destination]": merchantId,
+    }
+    const json = await callStripe(
+      'https://api.stripe.com/v1/payment_intents',
+      intent
+    );
+    console.log(json)
+    res.send(`
+      <html><body>
+      <pre>${JSON.stringify(json, undefined, 2)}</pre>
+      </body></html>
+    `);
+  });
+
   app.post('/webhook', async (req, res) => {
     console.log('------webhook-------');
     console.log(req.body);
@@ -282,9 +327,10 @@ const runServer = () => {
 
 const run = async () => {
   //open(accountLink.url);
-  open(`http://localhost:${PORT}/home`);
+  //open(`http://localhost:${PORT}/home`);
   //open(`http://localhost:${PORT}/payment_flow`);
   //open(`http://localhost:${PORT}/checkout.html`);
+  open(`http://localhost:${PORT}/checkout`);
   runServer();
 };
 
