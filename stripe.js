@@ -35,6 +35,18 @@ const callStripe = async (uri, params) => {
   return await response.json();
 };
 
+const callStripeGet = async (uri) => {
+  const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+  const response = await fetch(uri, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${stripeSecretKey}`,
+      Accept: 'application/json',
+    },
+  });
+  return await response.json();
+};
+
 /* Stripe API Utils */
 const createAccount = async ({platformId, email, country}) => {
   let service_agreement;
@@ -291,34 +303,59 @@ const runServer = () => {
     `);
   });
   app.get('/checkout', async (req, res) => {
+    const apiUrl = `https://api.stripe.com/v1/payment_intents`;
+    const piId = 'pi_3OWge1IhzJLcQFgD0HxkzPzw';
+    const intent = await callStripeGet(`${apiUrl}/${piId}`);
+    console.log(intent);
+
     const merchantId = 'acct_1OVXQDIAKCZWBuAI';
+    const stylistName = 'Anna Galebach';
+    const service = 'Wardrobe Selection - Online';
     const platformFeeRate = 0.1;
     const amount = 15120;
     const application_fee_amount = Math.round(amount * platformFeeRate);
     // example array: line_items[0][price]:w
-    const intent = {
-      amount,
-      application_fee_amount,
-      currency: 'usd',
-      capture_method: 'manual',
-      "transfer_data[destination]": merchantId,
+    const session = {
+      'mode': 'payment',
+      'success_url': `${domain}/success`,
+      'line_items[0][quantity]': 1,
+      'line_items[0][price_data][currency]': 'usd',
+      'line_items[0][price_data][unit_amount]': amount,
+      'line_items[0][price_data][product_data][name]': `${stylistName}: ${service}`,
+      'payment_intent_data[application_fee_amount]': application_fee_amount,
+      'payment_intent_data[capture_method]': 'manual',
+      'payment_intent_data[transfer_data][destination]': merchantId,
+      'payment_intent_data[metadata][stylistId]': merchantId,
+      'payment_intent_data[metadata][service]': service,
     }
     const json = await callStripe(
-      'https://api.stripe.com/v1/payment_intents',
-      intent
+      'https://api.stripe.com/v1/checkout/sessions',
+      session,
     );
-    console.log(json)
+    console.log(json.url)
     res.send(`
       <html><body>
       <pre>${JSON.stringify(json, undefined, 2)}</pre>
       </body></html>
     `);
   });
+  app.get('/success', async (req, res) => {
+    console.log('success');
+    console.log(req.query);
+    res.send(`success`);
+  });
 
   app.post('/stripe_webhooks', async (req, res) => {
     console.log('------webhook-------');
-    console.log(req.body);
-    res.send('webhook');
+    const obj = req.body.data.object;
+    console.log(req.body.type);
+    if (obj.type === 'payment_intent.created' ||
+        obj.type === 'payment_intent.amount_capturable_updated') {
+      const intent = await stripe.paymentIntents.retrieve(obj.id);
+      console.log(intent);
+      console.log(intent.metadata);
+    }
+    res.status(200).send();
   });
 
   app.listen(port, () => {
