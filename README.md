@@ -1,6 +1,12 @@
 # Payment Integration Examples
 Uses nodejs version 20 or greater.
 
+If you see error
+```
+> node --no-warnings --env-file=.env stripe.js
+```
+it means you need to use version 20 or greater (`nvm use 20`).
+
 ## Stripe
 Notes
 * Stripe can go to `reauth` URL even when creation succeeded. Need to

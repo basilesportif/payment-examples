@@ -321,6 +321,8 @@ const runServer = () => {
     const session = {
       'mode': 'payment',
       'success_url': `${domain}/success`,
+      //'locale': 'ru',
+      'customer_email': 'blah@timblah.com',
       'line_items[0][quantity]': 1,
       'line_items[0][price_data][currency]': 'usd',
       'line_items[0][price_data][unit_amount]': amount,
@@ -352,6 +354,7 @@ const runServer = () => {
     console.log('------webhook-------');
     const obj = req.body.data.object;
     console.log(req.body.type);
+    console.log(req.body);
     if (req.body.type === 'payment_intent.amount_capturable_updated') {
       const intent = await stripe.paymentIntents.retrieve(obj.id);
       console.log(intent);
