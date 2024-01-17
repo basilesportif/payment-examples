@@ -370,10 +370,10 @@ const runServer = () => {
 
 const run = async () => {
   //open(accountLink.url);
-  //open(`http://localhost:${PORT}/home`);
+  open(`http://localhost:${PORT}/home`);
   //open(`http://localhost:${PORT}/payment_flow`);
   //open(`http://localhost:${PORT}/checkout.html`);
-  open(`http://localhost:${PORT}/checkout`);
+  //open(`http://localhost:${PORT}/checkout`);
   runServer();
 };
 
