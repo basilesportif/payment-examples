@@ -103,7 +103,7 @@ const runServer = () => {
       <a href="${accountLink.url}">Bank Registration for ${account.email}</a>
       </body></html>
     `);
-  };
+  });
 
   app.get('/home', async (req, res) => {
     const accounts = await stripe.accounts.list({ limit: 10 });
