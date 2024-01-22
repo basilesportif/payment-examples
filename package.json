@@ -10,7 +10,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "fondy": "node --no-warnings fondy.js",
-    "stripe": "node --no-warnings --env-file=.env stripe.js"
+    "stripe": "node --no-warnings --env-file=.env stripe.js",
     "stripe-prod": "node --no-warnings --env-file=.env stripe-prod.js"
   },
   "repository": {
