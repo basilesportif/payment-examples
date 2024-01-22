@@ -214,6 +214,7 @@ const runServer = () => {
       <br>
       <a href="${domain}/home">Home</a>
     `);
+  });
   app.get('/success', async (req, res) => {
     console.log('success');
     console.log(req.query);
