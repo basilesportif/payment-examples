@@ -88,13 +88,21 @@ const createAccount = async ({platformId, email, country}) => {
 const runServer = () => {
   const app = express();
   const port = PORT;
-  const domain = `http://localhost:${port}`;
+  const domain = `https://datwet.space`;
   app.use(express.urlencoded({ extended: true }));
   app.use(express.json());
   app.use(express.static('public'));
 
   app.get('/account/:accountId', async (req, res) => {
     const { accountId } = req.params;
+    const account = await stripe.accounts.retrieve(accountId);
+    const accountLink = await getAccountLink(domain, accountId);
+    res.send(`
+      <html><body>
+      <h1>Account: ${account.email}</h1>
+      <a href="${accountLink.url}">Bank Registration for ${account.email}</a>
+      </body></html>
+    `);
   };
 
   app.get('/home', async (req, res) => {
