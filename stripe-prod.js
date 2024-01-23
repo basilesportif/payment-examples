@@ -113,6 +113,7 @@ const runServer = () => {
     table += `<td>id</td>`;
     table += `<td>email</td>`;
     table += `<td>country</td>`;
+    table += `<td>Setup Link</td>`;
     table += `<td>Express Dashboard</td>`;
     table += `<td>Status</td>`;
     table += `<td>Payout Interval</td>`;
@@ -126,6 +127,7 @@ const runServer = () => {
       table += `<td>${account.id}</td>`;
       table += `<td>${account.email}</td>`;
       table += `<td>${account.country}</td>`;
+      table += `<td><a href="${domain}/account/${account.id}">Setup Link</a></td>`;
       if (account.requirements.currently_due.length === 0) {
         const loginLink = await stripe.accounts.createLoginLink(account.id);
         table += `<td><a href="${loginLink.url}">Express Dashboard</a></td>`;
@@ -135,6 +137,7 @@ const runServer = () => {
       else {
         table += `<td>n/a</td>`;
         table += `<td><a href="${accountLink.url}">Onboard</a></td>`;
+        table += `<td><pre>${JSON.stringify(account.settings.payouts.schedule.interval, undefined, 2)}</pre></td>`;
       }
       table += `<td>${account.charges_enabled}</td>`;
       table += `<td>${account.payouts_enabled}</td>`;
@@ -149,11 +152,13 @@ const runServer = () => {
 
         <label for="country">Country:</label>
         <select id="country" name="country" required>
+          <option value="CZ">Czech Republic</option>
           <option value="DK">Denmark</option>
           <option value="FR">France</option>
           <option value="DE">Germany</option>
           <option value="IT">Italy</option>
           <option value="KZ">Kazakhstan</option>
+          <option value="RO">Romania</option>
           <option value="UK">United Kingdom</option>
           <option value="US">USA</option>
         </select>
