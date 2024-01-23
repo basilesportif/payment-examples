@@ -88,7 +88,7 @@ const createAccount = async ({platformId, email, country}) => {
 const runServer = () => {
   const app = express();
   const port = PORT;
-  const domain = `https://nectar.cloud`;
+  const domain = `https://onboard.mush.style`;
   app.use(express.urlencoded({ extended: true }));
   app.use(express.json());
   app.use(express.static('public'));
