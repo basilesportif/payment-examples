@@ -99,8 +99,8 @@ const runServer = () => {
     const accountLink = await getAccountLink(domain, accountId);
     res.send(`
       <html><body>
-      <h1>Account: ${account.email}</h1>
-      <a href="${accountLink.url}">Bank Registration for ${account.email}</a>
+      <h1>Set up Stripe bank account for: ${account.email}</h1>
+      <a href="${accountLink.url}">Click here to do Stripe registration for ${account.email}</a>
       </body></html>
     `);
   });
