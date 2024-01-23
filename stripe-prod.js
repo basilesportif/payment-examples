@@ -142,7 +142,7 @@ const runServer = () => {
     }
     table += "</table>";
     res.send(
-      `<html><body>
+      `<html><body><title>Mush Stripe Stylists</title>
       <form action="${domain}/create_stylist" method="post">
         <label for="email">Email:</label>
         <input type="email" id="email" name="email" required>
