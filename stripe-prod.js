@@ -158,7 +158,7 @@ const runServer = () => {
           <option value="DE">Germany</option>
           <option value="IT">Italy</option>
           <option value="KZ">Kazakhstan</option>
-          <option value="Portugal">PT</option>
+          <option value="PT">Portugal</option>
           <option value="RO">Romania</option>
           <option value="UK">United Kingdom</option>
           <option value="US">USA</option>
