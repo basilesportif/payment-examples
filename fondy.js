@@ -310,8 +310,6 @@ const payP2P = async () => {
   });
   console.log(r);
 */
-
-
 };
 payP2P();
 
