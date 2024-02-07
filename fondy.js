@@ -19,8 +19,8 @@ const getSignature = (password, req) => {
     acc[key] = req[key];
     return acc;
   }, {});
-  const joined = 
-    `${password}|` + 
+  const joined =
+    `${password}|` +
     Object.keys(sorted).map(key => sorted[key]).join('|');
   const signature = crypto.createHash('sha1')
     .update(joined)
@@ -28,21 +28,21 @@ const getSignature = (password, req) => {
   return { ...sorted, signature };
 };
 
-const callFondy = async ({password, apiUrl, req}) => {
+const callFondy = async ({ password, apiUrl, req }) => {
   const signedReq = getSignature(password, req);
-  const res = await 
+  const res = await
     fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({request: signedReq}),
+      body: JSON.stringify({ request: signedReq }),
     });
   return await res.json();
 };
 
 /* https://docs.fondy.eu/en/docs/page/12/ */
-const capturePayment = async ({order_id, amount, currency}) => {
+const capturePayment = async ({ order_id, amount, currency }) => {
   const req = {
     order_id,
     merchant_id: TEST_MERCHANT_ID,
@@ -59,7 +59,7 @@ const capturePayment = async ({order_id, amount, currency}) => {
 };
 
 /* https://docs.fondy.eu/en/docs/page/7/ */
-const refundPayment = async ({order_id, amount, currency}) => {
+const refundPayment = async ({ order_id, amount, currency }) => {
   const req = {
     order_id,
     merchant_id: TEST_MERCHANT_ID,
@@ -76,7 +76,7 @@ const refundPayment = async ({order_id, amount, currency}) => {
   });
 };
 
-const doP2PPayment = async ({card, amount, currency}) => {
+const doP2PPayment = async ({ card, amount, currency }) => {
   const req = {
     order_id: uuidv4(),
     order_desc: `payment to ${card}`,
@@ -94,7 +94,7 @@ const doP2PPayment = async ({card, amount, currency}) => {
   });
 };
 
-const mkReq = ({order_id, order_desc, email, amount, currency}) => {
+const mkReq = ({ order_id, order_desc, email, amount, currency }) => {
   return {
     order_id,
     order_desc,
@@ -136,7 +136,7 @@ const runServer = () => {
   const port = 3000;
   app.use(express.urlencoded({ extended: true }));
   app.use(express.json());
-  
+
   app.post('/server_callback_url', (req, res) => {
     console.log('server_callback_url');
     console.log(req.body);
@@ -222,7 +222,8 @@ const runServer = () => {
       order_desc: 'Stylist: Ganna',
       email: req.body.email,
       amount: req.body.amount,
-      currency: 'USD'};
+      currency: 'USD'
+    };
     insertOrderDb(order);
     const fondyReq = mkReq(order);
     console.log(withPreAuth(fondyReq));
@@ -250,7 +251,7 @@ const runServer = () => {
     res.send(
       `<html><body>
       <a href="http://localhost:3000/p2p_payment/${card1}/${amount}">
-        <button>Payout $${amount/100.0} to ${card1}</button>
+        <button>Payout $${amount / 100.0} to ${card1}</button>
       </a>
       <br/>
       <br/>
@@ -275,4 +276,43 @@ const run = async () => {
   runServer();
 };
 
-run();
+const jsonToBase64 = (jsonString) => {
+  return Buffer.from(jsonString).toString('base64');
+};
+
+const payP2P = async () => {
+  const itn = {
+    receiver_inn: "3374411125",
+    receiver_doc_type: "ipn",
+  };
+
+  const cardNumber = process.env.UA_CARD_NUMBER;
+  console.log(process.env.FONDY_P2P_KEY)
+  const req = {
+    merchant_id: "1539951",
+    // order id must be new: this is a new tx
+    order_id: uuidv4(),
+    order_desc: "mush: Розбір гардеробу, Alina Shor, 28 січ. — 3 лют., Особисто, Україна",
+    // amount must be with 2 zeros for cents
+    amount: "600500",
+    currency: "UAH",
+    receiver_card_number: `${cardNumber}`,
+    reservation_data: jsonToBase64(JSON.stringify(itn)),
+  };
+  //console.log(req);
+  console.log(getSignature(process.env.FONDY_P2P_KEY, req));
+
+  /*
+  const r = await callFondy({
+    password: process.env.FONDY_P2P_KEY,
+    apiUrl: "https://pay.fondy.eu/api/p2pcredit/",
+    req,
+  });
+  console.log(r);
+*/
+
+
+};
+payP2P();
+
+//run();

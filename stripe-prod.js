@@ -172,6 +172,7 @@ const runServer = () => {
       </body></html>`
     );
   });
+
   app.post('/create_stylist', async (req, res) => {
     console.log('create_stylist');
     console.log(req.body);
@@ -228,7 +229,7 @@ const runServer = () => {
   });
 
   app.listen(port, () => {
-    console.log(`Stripe app listening at ${domain}`);
+    console.log(`Stripe app listening at ${domain}, local port ${port}`);
   });
 };
 
