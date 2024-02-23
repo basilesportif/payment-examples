@@ -280,37 +280,35 @@ const jsonToBase64 = (jsonString) => {
   return Buffer.from(jsonString).toString('base64');
 };
 
-const payP2P = async () => {
+const payP2P = async (inn, cardNumber, amount, desc, password, merchant_id) => {
   const itn = {
-    receiver_inn: "3374411125",
+    receiver_inn: inn,
     receiver_doc_type: "ipn",
   };
 
-  const cardNumber = process.env.UA_CARD_NUMBER;
-  console.log(process.env.FONDY_P2P_KEY)
   const req = {
-    merchant_id: "1539951",
+    merchant_id,
     // order id must be new: this is a new tx
     order_id: uuidv4(),
-    order_desc: "mush: Розбір гардеробу, Alina Shor, 28 січ. — 3 лют., Особисто, Україна",
+    order_desc: desc,
     // amount must be with 2 zeros for cents
-    amount: "600500",
+    amount: amount,
     currency: "UAH",
     receiver_card_number: `${cardNumber}`,
     reservation_data: jsonToBase64(JSON.stringify(itn)),
   };
   //console.log(req);
-  console.log(getSignature(process.env.FONDY_P2P_KEY, req));
 
-  /*
   const r = await callFondy({
-    password: process.env.FONDY_P2P_KEY,
+    password,
     apiUrl: "https://pay.fondy.eu/api/p2pcredit/",
     req,
   });
   console.log(r);
-*/
+
 };
-payP2P();
+const pass_553 = process.env.FONDY_P2P_KEY_1539553;
+payP2P("ITN", "CARD", "1026000", "DESC", pass_553, "1539553");
+payP2P("ITN", "CARD", "970200", "DESC", pass_553, "1539553");
 
 //run();
